@@ -94,12 +94,13 @@ COPY --from=build /src/darknet/data data/
 # Get release version of yolov4.cfg
 WORKDIR /app/data
 RUN mv yolov4.cfg yolov4.cfg.github
+RUN wget --no-check-certificate 'https://drive.google.com/uc?export=download&id=15NIlaC-iPr5TegGDhzevyUmLQuQG7cyj' -O yolov4.weights
+
 COPY yolov4.cfg .
 # Reconfigure to avoid out-of-memory errors
 RUN sed -i -e "s!subdivisions=8!subdivisions=64!g" yolov4.cfg
 COPY obj.data .
 COPY obj.names .
-COPY yolov4.weights .
 
 # Install font
 RUN wget http://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-sans-ttf-2.37.zip
