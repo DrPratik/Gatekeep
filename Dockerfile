@@ -28,13 +28,22 @@ WORKDIR /src
 RUN git clone -n https://github.com/AlexeyAB/darknet.git
 WORKDIR /src/darknet
 RUN git checkout 38a164bcb9e017f8c9c3645a39419320e217545e
-RUN sed -i -e "s!OPENMP=0!OPENMP=1!g" Makefile && \
-    sed -i -e "s!AVX=0!AVX=1!g" Makefile && \
-    sed -i -e "s!LIBSO=0!LIBSO=1!g" Makefile && \
-    sed -i -e "s!GPU=0!GPU=${cuda}!g" Makefile && \
-    sed -i -e "s!CUDNN=0!CUDNN=${cuda}!g" Makefile && \
-    sed -i -e "s!CUDNN_HALF=0!CUDNN_HALF=${cuda_tc}!g" Makefile && \
-    make
+# Modify Makefile based on architecture
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+        sed -i -e "s!AVX=1!AVX=0!g" Makefile && \
+        sed -i -e "s!AVX2=1!AVX2=0!g" Makefile && \
+        sed -i -e "s!SSE3=1!SSE3=0!g" Makefile && \
+        sed -i -e "s!SSE4_1=1!SSE4_1=0!g" Makefile && \
+        sed -i -e "s!SSE4_2=1!SSE4_2=0!g" Makefile && \
+        sed -i -e "s!SSE4A=1!SSE4A=0!g" Makefile && \
+        sed -i -e "s!OPENMP=1!OPENMP=0!g" Makefile && \
+        sed -i -e "s!LIBSO=1!LIBSO=0!g" Makefile; \
+    fi
+
+# Set CUDA-related flags (disable for ARM if no GPU support)
+RUN sed -i -e "s!GPU=1!GPU=0!g" Makefile && \
+    sed -i -e "s!CUDNN=1!CUDNN=0!g" Makefile && \
+    sed -i -e "s!CUDNN_HALF=1!CUDNN_HALF=0!g" Makefile
 
 # App image:
 FROM ${app_image}
