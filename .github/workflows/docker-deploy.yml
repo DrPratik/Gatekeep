@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # You can change this to another OS if needed
+    runs-on: ubuntu-18.04  # You can change this to another OS if needed
 
     steps:
     # Step 1: Checkout the code
@@ -32,7 +32,7 @@ jobs:
         docker push pratikdhore/gatekeep:latest
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     needs: build
     steps:
