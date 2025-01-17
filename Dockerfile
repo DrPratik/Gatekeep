@@ -1,6 +1,6 @@
 # Define base images
-ARG build_image="ubuntu:18.04"
-ARG app_image="ubuntu:18.04"
+ARG build_image="arm64v8/ubuntu:18.04"
+ARG app_image="arm64v8/ubuntu:18.04"
 
 # Build image
 FROM ${build_image} AS build
