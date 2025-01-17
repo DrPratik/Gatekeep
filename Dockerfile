@@ -29,6 +29,7 @@ RUN git clone -n https://github.com/AlexeyAB/darknet.git
 WORKDIR /src/darknet
 RUN git checkout 38a164bcb9e017f8c9c3645a39419320e217545e
 # Modify Makefile based on architecture
+# Modify Makefile for aarch64 architecture
 RUN if [ "$(uname -m)" = "aarch64" ]; then \
         sed -i -e "s!AVX=1!AVX=0!g" Makefile && \
         sed -i -e "s!AVX2=1!AVX2=0!g" Makefile && \
@@ -37,8 +38,11 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
         sed -i -e "s!SSE4_2=1!SSE4_2=0!g" Makefile && \
         sed -i -e "s!SSE4A=1!SSE4A=0!g" Makefile && \
         sed -i -e "s!OPENMP=1!OPENMP=0!g" Makefile && \
-        sed -i -e "s!LIBSO=1!LIBSO=1!g" Makefile; \
+        sed -i -e "s!LIBSO=0!LIBSO=1!g" Makefile; \
     fi
+
+# Build darknet and verify library creation
+RUN make LIBSO=1 && ls -la /src/darknet
 
 # Set CUDA-related flags (disable for ARM if no GPU support)
 RUN sed -i -e "s!GPU=1!GPU=0!g" Makefile && \
