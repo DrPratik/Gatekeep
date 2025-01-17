@@ -24,7 +24,7 @@ jobs:
     # Step 3: Build the Docker image
     - name: Build Docker image
       run: |
-        docker build -t pratikdhore/gatekeep:latest .
+        docker build --platform linux/arm64 -t pratikdhore/gatekeep:latest .
 
     # Step 4: Push the Docker image to Docker Hub
     - name: Push Docker image
