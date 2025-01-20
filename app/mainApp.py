@@ -29,17 +29,19 @@ def sigterm_handler(_signo, _stack_frame):
     sys.exit()
 
 def detect(filename, threshold):
-    logging.debug(f"Loading image: {filename}")
+    # Load the image using Darknet's load_image function
     im = darknet.load_image(bytes(filename, "ascii"), 0, 0)
-    logging.debug(f"Image loaded with dimensions: {im.w}x{im.h}")
+    # Ensure the threshold is a float
+    threshold = float(threshold)
+    print(f"Threshold type: {type(threshold)}")  # Debugging statement
+    # Perform object detection using YOLOv4
     r = darknet.detect_image(network, class_names, im, thresh=threshold)
-    logging.debug(f"Raw detections: {r}")
+    # Free the image memory
     darknet.free_image(im)
-    # Convert confidence from string to float:
+    # Convert confidence from string to float
     if len(r) > 0:
         for i in range(len(r)):
             r[i] = (r[i][0], float(r[i][1]), r[i][2])
-    logging.debug(f"Processed detections: {r}")
     return r
 
 def get_image_type(filename):
@@ -177,6 +179,8 @@ def detect_from_file():
     try:
         file_to_upload = connexion.request.files['image_file']
         threshold = connexion.request.form.get('threshold', 0.9)  # Set default threshold to 0.9 if not provided
+        threshold = float(threshold)  # Ensure threshold is a float
+        print(f"Received threshold: {threshold}, type: {type(threshold)}")  # Debugging statement
         # Use mkstemp to generate unique temporary filename
         fd, filename = tempfile.mkstemp()
         os.close(fd)
