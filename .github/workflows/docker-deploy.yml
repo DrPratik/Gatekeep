@@ -28,6 +28,7 @@ jobs:
     # Step 4: Build the Docker image
     - name: Build Docker image
       run: |
+        docker buildx create --use
         docker buildx build --platform linux/arm64 -t pratikdhore/gatekeep:latest . --push
         
   deploy:
