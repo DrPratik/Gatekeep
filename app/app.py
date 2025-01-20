@@ -167,7 +167,7 @@ def detect_from_url(url, threshold):
 def detect_from_file():
     try:
         file_to_upload = connexion.request.files['image_file']
-        threshold = float(connexion.request.form['threshold'])
+        threshold = connexion.request.form.get('threshold', 0.9)  # Set default threshold to 0.9 if not provided
         # Use mkstemp to generate unique temporary filename
         fd, filename = tempfile.mkstemp()
         os.close(fd)
