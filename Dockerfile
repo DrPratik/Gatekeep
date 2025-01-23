@@ -96,7 +96,7 @@ WORKDIR /app
 COPY app/requirement.txt . 
 COPY app/mainApp.py .
 COPY app/swag.yaml .
-RUN python3.7 -m pip install --no-cache-dir -r requirement.txt
+RUN python3.7 -m pip install -r requirement.txt
 
 # Get darknet from build image
 COPY --from=build /src/darknet/libdarknet.so .
