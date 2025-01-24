@@ -4,7 +4,6 @@ Click==7.0
 clickclick==1.2.2
 connexion==2.3.0
 Flask==1.1.1
-gevent>=21.1.2
 greenlet>=2.0.0
 idna==2.8
 inflection==0.3.1

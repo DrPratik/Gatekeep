@@ -79,7 +79,7 @@ RUN apt-get update --fix-missing && apt-get install -y \
 RUN python3.9 -m pip install --upgrade pip setuptools wheel
 
 # Install gevent separately
-RUN python3.9 -m pip install --use-pep517 gevent
+RUN python3.9 -m pip install gevent
 
 # Set your working directory
 WORKDIR /app
