@@ -4,8 +4,7 @@ ARG app_image="ubuntu:20.04"
 
 # Build image
 FROM --platform=$BUILDPLATFORM ${build_image} AS build
-RUN apt-get update
-RUN apt-get install -y build-essential git software-properties-common
+RUN apt-get update && apt-get install -y build-essential git software-properties-common
 
 # Add deadsnakes PPA and install Python 3.9
 RUN add-apt-repository ppa:deadsnakes/ppa && \
@@ -37,25 +36,13 @@ WORKDIR /src
 FROM --platform=$TARGETPLATFORM ${app_image}
 
 # Clean apt cache and ensure a writable filesystem
-RUN apt-get clean
-RUN rm -rf /var/lib/apt/lists/*
-RUN apt-get update
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* && apt-get update
 
 # Change mirror to avoid repository issues
-RUN sed -i 's/http:\/\/archive.ubuntu.com/http:\/\/mirror.math.princeton.edu\/pub\/ubuntu/g' /etc/apt/sources.list
-RUN apt-get update
+RUN sed -i 's/http:\/\/archive.ubuntu.com/http:\/\/mirror.math.princeton.edu\/pub\/ubuntu/g' /etc/apt/sources.list && apt-get update
 
 # Install required packages
-RUN apt-get install -y python3.9 
-RUN apt-get install -y python3.9-dev 
-RUN apt-get install -y python3.9-distutils 
-RUN apt-get install -y python3-pip 
-RUN apt-get install -y python3-setuptools 
-RUN apt-get install -y libsm6 
-RUN apt-get install -y libxext6 
-RUN apt-get install -y libxrender-dev 
-RUN apt-get install -y git
-RUN apt-get install -y wget unzip  # Install wget and unzip
+RUN apt-get install -y python3.9 python3.9-dev python3.9-distutils python3-pip python3-setuptools libsm6 libxext6 libxrender-dev git wget unzip
 
 # Install system dependencies for Pillow
 RUN apt-get update --fix-missing && apt-get install -y \
@@ -82,11 +69,12 @@ RUN apt-get update --fix-missing && apt-get install -y \
 # Upgrade pip, setuptools, and wheel
 RUN python3.9 -m pip install --upgrade pip setuptools wheel
 
-# Install gevent separately
-RUN python3.9 -m pip install gevent
+# Install gevent separately using pre-built wheels
+RUN python3.9 -m pip install --only-binary :all: gevent
 
 # Set your working directory
 WORKDIR /app
+
 # Copy requirements.txt and install dependencies
 COPY app/requirement.txt . 
 COPY app/mainApp.py . 
