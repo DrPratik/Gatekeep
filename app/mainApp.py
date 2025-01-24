@@ -31,7 +31,7 @@ def sigterm_handler(_signo, _stack_frame):
 def detect(filename, threshold):
     logging.debug(f"Loading image: {filename}")
     coco_model = YOLO('yolov8n.pt')
-    license_plate_detector = YOLO('license_plate_detector.pt')
+    license_plate_detector = YOLO('license_plate_detector.pt', weights_only = True)
 
     # Load image from file
     with open(filename, 'rb') as f:
