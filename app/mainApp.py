@@ -32,11 +32,11 @@ def detect(filename, threshold):
     coco_model = YOLO('yolov8n.pt')
 
     # Manually load the weights
-    weights = torch.load('license_plate_detector.pt', map_location='cpu')
+    weights = torch.load('license_plate_detector.pt', map_location='cpu',weights_only=True)
     
     # Initialize the model and load the weights
     license_plate_detector = YOLO('yolov8n.pt')  # Initialize with a base model
-    license_plate_detector.model.load_state_dict(weights)
+    license_plate_detector.model.load_state_dict(weights,strict=False)
 
     # Load image from file
     with open(filename, 'rb') as f:
