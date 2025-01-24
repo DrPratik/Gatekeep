@@ -22,5 +22,5 @@ swagger-ui-bundle==0.0.5
 urllib3==1.25.3
 Werkzeug==0.15.5
 pytesseract==0.3.8  # Now Pillow is already installed
-opencv-python==4.5.5.64
+opencv-python>=4.6.0
 ultralytics==8.0.114
