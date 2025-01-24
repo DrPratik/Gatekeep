@@ -1,18 +1,16 @@
 # Define base images
-ARG build_image="arm64v8/ubuntu:18.04"
-ARG app_image="arm64v8/ubuntu:18.04"
+ARG build_image="ubuntu:20.04"
+ARG app_image="ubuntu:20.04"
 
 # Build image
-FROM ${build_image} AS build
+FROM --platform=$BUILDPLATFORM ${build_image} AS build
 RUN apt-get update
-RUN apt-get install -y build-essential git
+RUN apt-get install -y build-essential git software-properties-common
 
-# Install required libraries for gevent and pytesseract
-RUN apt-get install -y python3.7 python3.7-dev python3-pip python3-setuptools libsm6 libxext6 libxrender-dev tesseract-ocr
-
-# Install Python 3.7 and required packages
-RUN apt-get update && \
-    apt-get install -y python3.7 python3.7-dev python3-pip python3-setuptools libsm6 libxext6 curl
+# Add deadsnakes PPA and install Python 3.8
+RUN add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install -y python3.8 python3.8-dev python3.8-distutils python3-pip python3-setuptools libsm6 libxext6 libxrender-dev tesseract-ocr
 
 # Ensure pip is installed for Python 3.7
 RUN curl https://bootstrap.pypa.io/pip/3.7/get-pip.py -o get-pip.py && python3.7 get-pip.py
@@ -28,29 +26,16 @@ WORKDIR /src
 RUN git clone -n https://github.com/AlexeyAB/darknet.git
 WORKDIR /src/darknet
 RUN git checkout 38a164bcb9e017f8c9c3645a39419320e217545e
-# Modify Makefile based on architecture
-# Modify Makefile for aarch64 architecture
-RUN if [ "$(uname -m)" = "aarch64" ]; then \
-        sed -i -e "s!AVX=1!AVX=0!g" Makefile && \
-        sed -i -e "s!AVX2=1!AVX2=0!g" Makefile && \
-        sed -i -e "s!SSE3=1!SSE3=0!g" Makefile && \
-        sed -i -e "s!SSE4_1=1!SSE4_1=0!g" Makefile && \
-        sed -i -e "s!SSE4_2=1!SSE4_2=0!g" Makefile && \
-        sed -i -e "s!SSE4A=1!SSE4A=0!g" Makefile && \
-        sed -i -e "s!OPENMP=1!OPENMP=0!g" Makefile && \
-        sed -i -e "s!LIBSO=0!LIBSO=1!g" Makefile; \
-    fi
-
-# Build darknet and verify library creation
-RUN make LIBSO=1 && ls -la /src/darknet
-
-# Set CUDA-related flags (disable for ARM if no GPU support)
-RUN sed -i -e "s!GPU=1!GPU=0!g" Makefile && \
-    sed -i -e "s!CUDNN=1!CUDNN=0!g" Makefile && \
-    sed -i -e "s!CUDNN_HALF=1!CUDNN_HALF=0!g" Makefile
+RUN sed -i -e "s!OPENMP=0!OPENMP=1!g" Makefile && \
+    sed -i -e "s!AVX=0!AVX=1!g" Makefile && \
+    sed -i -e "s!LIBSO=0!LIBSO=1!g" Makefile && \
+    sed -i -e "s!GPU=0!GPU=${cuda}!g" Makefile && \
+    sed -i -e "s!CUDNN=0!CUDNN=${cuda}!g" Makefile && \
+    sed -i -e "s!CUDNN_HALF=0!CUDNN_HALF=${cuda_tc}!g" Makefile && \
+    make
 
 # App image:
-FROM ${app_image}
+FROM --platform=$TARGETPLATFORM ${app_image}
 
 # Clean apt cache and ensure a writable filesystem
 RUN apt-get clean
@@ -62,41 +47,48 @@ RUN sed -i 's/http:\/\/archive.ubuntu.com/http:\/\/mirror.math.princeton.edu\/pu
 RUN apt-get update
 
 # Install required packages
-RUN apt-get install -y python3.7 python3.7-dev python3-pip python3-setuptools libsm6 libxext6 libxrender-dev tesseract-ocr
-
-RUN python3.7 -m pip install Pillow
-
-# Install pip3 for Python 3.7
-#RUN python3.7 -m ensurepip --upgrade
-RUN python3.7 -m pip install --upgrade pip
-
-FROM python:3.7
+RUN apt-get install -y python3.8 
+RUN apt-get install -y python3.8-dev 
+RUN apt-get install -y python3.8-distutils 
+RUN apt-get install -y python3-pip 
+RUN apt-get install -y python3-setuptools 
+RUN apt-get install -y libsm6 
+RUN apt-get install -y libxext6 
+RUN apt-get install -y libxrender-dev 
+RUN apt-get install -y git
 
 # Install system dependencies for Pillow
 RUN apt-get update --fix-missing && apt-get install -y \
     build-essential \
     libjpeg-dev \
-    tesseract-ocr \
     zlib1g-dev \
-    libgl1-mesa-glx \
     libfreetype6-dev \
     liblcms2-dev \
-    libopenjp2-7-dev \  
-    libimagequant-dev \
+    libopenjp2-7-dev \
+    libtiff-dev \
+    libwebp-dev \
+    libgl1-mesa-glx \
     libxcb1-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Upgrade setuptools
+RUN python3.8 -m pip install --upgrade setuptools
+
 # Install Pillow via pip
-RUN pip install --upgrade pip
-RUN pip install Pillow
+RUN python3.8 -m pip install --upgrade pip
+RUN python3.8 -m pip install Pillow
+
+# Install YOLOv8 from GitHub
+RUN python3.8 -m pip install git+https://github.com/ultralytics/ultralytics.git
 
 # Set your working directory
 WORKDIR /app
 
+# Copy requirements.txt and install dependencies
 COPY app/requirement.txt . 
 COPY app/mainApp.py .
 COPY app/swag.yaml .
-RUN python3.7 -m pip install -r requirement.txt
+RUN python3.7 -m pip install --no-cache-dir -r requirement.txt
 
 # Get darknet from build image
 COPY --from=build /src/darknet/libdarknet.so .
@@ -120,14 +112,5 @@ RUN wget http://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-sans-tt
 RUN unzip -j dejavu-sans-ttf-2.37.zip dejavu*/ttf/DejaVuSans.ttf
 RUN rm dejavu-sans-ttf-2.37.zip
 
-# Model to use (defaults to yolov3_coco):
-ARG weights_file="data/yolov4.weights"
-ARG config_file="data/yolov4.cfg"
-ARG meta_file="data/obj.data"
-ENV weights_file=${weights_file}
-ENV config_file=${config_file}
-ENV meta_file=${meta_file}
-
-
 WORKDIR /app
-CMD ["python3.7", "mainApp.py"]
+CMD ["python3.8", "mainApp.py"]

@@ -14,29 +14,36 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v2
 
-    # Step 2: Login to Docker Hub
+    # Step 2: Set up QEMU
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+
+    # Step 3: Set up Docker Buildx
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    # Step 4: Login to Docker Hub
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # Step 3: Set up Docker Buildx
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+    # Step 5: Build and push multi-platform Docker image
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: pratikdhore/gatekeep:latest
+        platforms: linux/amd64,linux/arm64
 
-    # Step 4: Build the Docker image
-    - name: Build Docker image
-      run: |
-        docker buildx create --use
-        docker buildx build --platform linux/arm64 -t pratikdhore/gatekeep:latest . --push
-        
   deploy:
     runs-on: ubuntu-latest
 
     needs: build
     steps:
-    # Step 5: SSH into your VM and deploy the Docker image
+    # Step 6: SSH into your VM and deploy the Docker image
     - name: SSH into VM and deploy Docker image
       uses: appleboy/ssh-action@v0.1.6
       with:

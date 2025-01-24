@@ -12,6 +12,7 @@ from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 import pytesseract
+from ultralytics import YOLO
 import cv2
 import numpy as np
 import re
@@ -29,20 +30,32 @@ def sigterm_handler(_signo, _stack_frame):
     sys.exit()
 
 def detect(filename, threshold):
-    # Load the image using Darknet's load_image function
-    im = darknet.load_image(bytes(filename, "ascii"), 0, 0)
-    # Ensure the threshold is a float
-    threshold = float(threshold)
-    print(f"Threshold type: {type(threshold)}")  # Debugging statement
-    # Perform object detection using YOLOv4
-    r = darknet.detect_image(network, class_names, im, thresh=threshold)
-    # Free the image memory
-    darknet.free_image(im)
-    # Convert confidence from string to float
-    if len(r) > 0:
-        for i in range(len(r)):
-            r[i] = (r[i][0], float(r[i][1]), r[i][2])
-    return r
+    logging.debug(f"Loading image: {filename}")
+    coco_model = YOLO('yolov8n.pt')
+    license_plate_detector = YOLO('license_plate_detector.pt')
+
+    # Load image from file
+    with open(filename, 'rb') as f:
+        img_bytes = f.read()
+
+    # Convert bytes to image
+    img = Image.open(io.BytesIO(img_bytes))
+    frame = np.array(img)
+
+    # Detect vehicles
+    detections = coco_model(frame)[0]
+    logging.debug(f"Image loaded with dimensions: {frame.shape[1]}x{frame.shape[0]}")
+    logging.debug(f"Raw detections: {detections}")
+
+    # Process detections
+    results = []
+    for detection in detections.boxes.data.tolist():
+        x1, y1, x2, y2, score, class_id = detection
+        if score >= threshold:
+            results.append((class_id, score, (x1, y1, x2, y2)))
+
+    logging.debug(f"Processed detections: {results}")
+    return results
 
 def get_image_type(filename):
     img = Image.open(filename)
