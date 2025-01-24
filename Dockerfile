@@ -87,7 +87,7 @@ RUN python3.9 -m pip install gevent
 
 # Set your working directory
 WORKDIR /app
-RUN RUN wget https://raw.githubusercontent.com/Muhammad-Zeerak-Khan/Automatic-License-Plate-Recognition-using-YOLOv8/main/license_plate_detector.pt -O license_plate_detector.pt
+RUN wget https://raw.githubusercontent.com/Muhammad-Zeerak-Khan/Automatic-License-Plate-Recognition-using-YOLOv8/main/license_plate_detector.pt -O license_plate_detector.pt
 # Copy requirements.txt and install dependencies
 COPY app/requirement.txt . 
 COPY app/mainApp.py . 
