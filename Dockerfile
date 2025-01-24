@@ -62,6 +62,10 @@ RUN apt-get update --fix-missing && apt-get install -y \
     build-essential \
     libjpeg-dev \
     zlib1g-dev \
+    libglib2.0-0 \
+    libsm6  \
+    libxext6    \
+    libxrender-dev \
     libfreetype6-dev \
     liblcms2-dev \
     libopenjp2-7-dev \
