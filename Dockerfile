@@ -69,10 +69,17 @@ RUN apt-get update --fix-missing && apt-get install -y \
     libwebp-dev \
     libgl1-mesa-glx \
     libxcb1-dev \
+    libffi-dev \
+    libssl-dev \
+    gcc \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip, setuptools, and wheel
 RUN python3.9 -m pip install --upgrade pip setuptools wheel
+
+# Install gevent separately
+RUN python3.9 -m pip install --use-pep517 gevent
 
 # Set your working directory
 WORKDIR /app
