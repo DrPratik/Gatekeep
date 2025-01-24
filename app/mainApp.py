@@ -17,11 +17,10 @@ import numpy as np
 import re
 import requests
 import logging
-
+import torch
+import io
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
-
-
 
 # Setup handler to catch SIGTERM from Docker
 def sigterm_handler(_signo, _stack_frame):
@@ -31,7 +30,13 @@ def sigterm_handler(_signo, _stack_frame):
 def detect(filename, threshold):
     logging.debug(f"Loading image: {filename}")
     coco_model = YOLO('yolov8n.pt')
-    license_plate_detector = YOLO('license_plate_detector.pt', weights_only = True)
+
+    # Manually load the weights
+    weights = torch.load('license_plate_detector.pt', map_location='cpu')
+    
+    # Initialize the model and load the weights
+    license_plate_detector = YOLO('yolov8n.pt')  # Initialize with a base model
+    license_plate_detector.model.load_state_dict(weights)
 
     # Load image from file
     with open(filename, 'rb') as f:
@@ -284,18 +289,6 @@ def annotate_from_url(url, threshold):
         return 'HTTP error', err.code
     except:
         return 'An error occurred', 500
-
-# Load YOLO model:
-# configPath = os.environ.get("config_file")
-# weightPath = os.environ.get("weights_file")
-# metaPath = os.environ.get("meta_file")
-
-# network, class_names, class_colors = darknet.load_network(
-#     configPath,
-#     metaPath,
-#     weightPath,
-#     batch_size=1
-# )
 
 # Create API:
 app = connexion.App(__name__)
