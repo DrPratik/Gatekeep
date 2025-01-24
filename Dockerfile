@@ -55,6 +55,7 @@ RUN apt-get install -y libsm6
 RUN apt-get install -y libxext6 
 RUN apt-get install -y libxrender-dev 
 RUN apt-get install -y git
+RUN apt-get install -y wget unzip  # Install wget and unzip
 
 # Install system dependencies for Pillow
 RUN apt-get update --fix-missing && apt-get install -y \
