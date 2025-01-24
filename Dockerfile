@@ -7,14 +7,13 @@ FROM --platform=$BUILDPLATFORM ${build_image} AS build
 RUN apt-get update
 RUN apt-get install -y build-essential git software-properties-common
 
-# Add deadsnakes PPA and install Python 3.8
+# Add deadsnakes PPA and install Python 3.9
 RUN add-apt-repository ppa:deadsnakes/ppa && \
     apt-get update && \
-    apt-get install -y python3.8 python3.8-dev python3.8-distutils python3-pip python3-setuptools libsm6 libxext6 libxrender-dev tesseract-ocr
+    apt-get install -y python3.9 python3.9-dev python3.9-distutils python3-pip python3-setuptools libsm6 libxext6 libxrender-dev tesseract-ocr
 
-# Ensure pip is installed for Python 3.7
-RUN curl https://bootstrap.pypa.io/pip/3.7/get-pip.py -o get-pip.py && python3.7 get-pip.py
-
+# Ensure pip is installed for Python 3.9
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.9 get-pip.py
 
 # Should CUDA be enabled?
 ARG cuda=0
@@ -47,9 +46,9 @@ RUN sed -i 's/http:\/\/archive.ubuntu.com/http:\/\/mirror.math.princeton.edu\/pu
 RUN apt-get update
 
 # Install required packages
-RUN apt-get install -y python3.8 
-RUN apt-get install -y python3.8-dev 
-RUN apt-get install -y python3.8-distutils 
+RUN apt-get install -y python3.9 
+RUN apt-get install -y python3.9-dev 
+RUN apt-get install -y python3.9-distutils 
 RUN apt-get install -y python3-pip 
 RUN apt-get install -y python3-setuptools 
 RUN apt-get install -y libsm6 
@@ -72,23 +71,23 @@ RUN apt-get update --fix-missing && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade setuptools
-RUN python3.8 -m pip install --upgrade setuptools
+RUN python3.9 -m pip install --upgrade setuptools
 
 # Install Pillow via pip
-RUN python3.8 -m pip install --upgrade pip
-RUN python3.8 -m pip install Pillow
+RUN python3.9 -m pip install --upgrade pip
+RUN python3.9 -m pip install Pillow
 
 # Install YOLOv8 from GitHub
-RUN python3.8 -m pip install git+https://github.com/ultralytics/ultralytics.git
+RUN python3.9 -m pip install git+https://github.com/ultralytics/ultralytics.git
 
 # Set your working directory
 WORKDIR /app
 
 # Copy requirements.txt and install dependencies
 COPY app/requirement.txt . 
-COPY app/mainApp.py .
-COPY app/swag.yaml .
-RUN python3.8 -m pip install -r requirement.txt
+COPY app/mainApp.py . 
+COPY app/swag.yaml . 
+RUN python3.9 -m pip install -r requirement.txt
 
 # Get darknet from build image
 # COPY --from=build /src/darknet/libdarknet.so .
@@ -113,4 +112,4 @@ RUN unzip -j dejavu-sans-ttf-2.37.zip dejavu*/ttf/DejaVuSans.ttf
 RUN rm dejavu-sans-ttf-2.37.zip
 
 WORKDIR /app
-CMD ["python3.8", "mainApp.py"]
+CMD ["python3.9", "mainApp.py"]
