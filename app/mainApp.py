@@ -3,7 +3,6 @@ import os.path
 import sys
 import signal
 import connexion
-import darknet
 import urllib.request
 import urllib.error
 import flask
@@ -287,16 +286,16 @@ def annotate_from_url(url, threshold):
         return 'An error occurred', 500
 
 # Load YOLO model:
-configPath = os.environ.get("config_file")
-weightPath = os.environ.get("weights_file")
-metaPath = os.environ.get("meta_file")
+# configPath = os.environ.get("config_file")
+# weightPath = os.environ.get("weights_file")
+# metaPath = os.environ.get("meta_file")
 
-network, class_names, class_colors = darknet.load_network(
-    configPath,
-    metaPath,
-    weightPath,
-    batch_size=1
-)
+# network, class_names, class_colors = darknet.load_network(
+#     configPath,
+#     metaPath,
+#     weightPath,
+#     batch_size=1
+# )
 
 # Create API:
 app = connexion.App(__name__)
