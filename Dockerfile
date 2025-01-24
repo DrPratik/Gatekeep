@@ -22,16 +22,16 @@ ARG cuda_tc=0
 
 # Get and compile darknet
 WORKDIR /src
-RUN git clone -n https://github.com/AlexeyAB/darknet.git
-WORKDIR /src/darknet
-RUN git checkout 38a164bcb9e017f8c9c3645a39419320e217545e
-RUN sed -i -e "s!OPENMP=0!OPENMP=1!g" Makefile && \
-    sed -i -e "s!AVX=0!AVX=1!g" Makefile && \
-    sed -i -e "s!LIBSO=0!LIBSO=1!g" Makefile && \
-    sed -i -e "s!GPU=0!GPU=${cuda}!g" Makefile && \
-    sed -i -e "s!CUDNN=0!CUDNN=${cuda}!g" Makefile && \
-    sed -i -e "s!CUDNN_HALF=0!CUDNN_HALF=${cuda_tc}!g" Makefile && \
-    make
+# RUN git clone -n https://github.com/AlexeyAB/darknet.git
+# WORKDIR /src/darknet
+# RUN git checkout 38a164bcb9e017f8c9c3645a39419320e217545e
+# RUN sed -i -e "s!OPENMP=0!OPENMP=1!g" Makefile && \
+#     sed -i -e "s!AVX=0!AVX=1!g" Makefile && \
+#     sed -i -e "s!LIBSO=0!LIBSO=1!g" Makefile && \
+#     sed -i -e "s!GPU=0!GPU=${cuda}!g" Makefile && \
+#     sed -i -e "s!CUDNN=0!CUDNN=${cuda}!g" Makefile && \
+#     sed -i -e "s!CUDNN_HALF=0!CUDNN_HALF=${cuda_tc}!g" Makefile && \
+#     make
 
 # App image:
 FROM --platform=$TARGETPLATFORM ${app_image}
