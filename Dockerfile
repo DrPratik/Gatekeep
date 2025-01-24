@@ -70,15 +70,8 @@ RUN apt-get update --fix-missing && apt-get install -y \
     libxcb1-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade setuptools
-RUN python3.9 -m pip install --upgrade setuptools
-
-# Install Pillow via pip
-RUN python3.9 -m pip install --upgrade pip
-RUN python3.9 -m pip install Pillow
-
-# Install YOLOv8 from GitHub
-RUN python3.9 -m pip install git+https://github.com/ultralytics/ultralytics.git
+# Upgrade pip, setuptools, and wheel
+RUN python3.9 -m pip install --upgrade pip setuptools wheel
 
 # Set your working directory
 WORKDIR /app
