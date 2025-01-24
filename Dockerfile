@@ -88,24 +88,24 @@ WORKDIR /app
 COPY app/requirement.txt . 
 COPY app/mainApp.py .
 COPY app/swag.yaml .
-RUN python3.7 -m pip install --no-cache-dir -r requirement.txt
+RUN python3.8 -m pip install -r requirement.txt
 
 # Get darknet from build image
-COPY --from=build /src/darknet/libdarknet.so .
-COPY --from=build /src/darknet/build/darknet/x64/darknet.py .
-COPY --from=build /src/darknet/cfg data/
-COPY --from=build /src/darknet/data data/
+# COPY --from=build /src/darknet/libdarknet.so .
+# COPY --from=build /src/darknet/build/darknet/x64/darknet.py .
+# COPY --from=build /src/darknet/cfg data/
+# COPY --from=build /src/darknet/data data/
 
 # Get release version of yolov4.cfg
 WORKDIR /app/data
-RUN mv yolov4.cfg yolov4.cfg.github
-RUN wget --no-check-certificate 'https://drive.google.com/uc?export=download&id=15NIlaC-iPr5TegGDhzevyUmLQuQG7cyj' -O yolov4.weights
+# RUN mv yolov4.cfg yolov4.cfg.github
+# RUN wget --no-check-certificate 'https://drive.google.com/uc?export=download&id=15NIlaC-iPr5TegGDhzevyUmLQuQG7cyj' -O yolov4.weights
 
-COPY yolov4.cfg .
-# Reconfigure to avoid out-of-memory errors
-RUN sed -i -e "s!subdivisions=8!subdivisions=64!g" yolov4.cfg
-COPY obj.data .
-COPY obj.names .
+# COPY yolov4.cfg .
+# # Reconfigure to avoid out-of-memory errors
+# RUN sed -i -e "s!subdivisions=8!subdivisions=64!g" yolov4.cfg
+# COPY obj.data .
+# COPY obj.names .
 
 # Install font
 RUN wget http://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-sans-ttf-2.37.zip
