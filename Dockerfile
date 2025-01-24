@@ -41,6 +41,11 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* && apt-get update
 # Change mirror to avoid repository issues
 RUN sed -i 's/http:\/\/archive.ubuntu.com/http:\/\/mirror.math.princeton.edu\/pub\/ubuntu/g' /etc/apt/sources.list && apt-get update
 
+# Set DEBIAN_FRONTEND to noninteractive and configure timezone
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Kolkata
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # Install required packages
 RUN apt-get install -y python3.9 python3.9-dev python3.9-distutils python3-pip python3-setuptools libsm6 libxext6 libxrender-dev git wget unzip
 
