@@ -32,7 +32,7 @@ def detect(filename, threshold):
     coco_model = YOLO('yolov8n.pt')
 
     # Manually load the weights
-    weights = torch.load('license_plate_detector.pt', map_location='cpu',weights_only=False)
+    weights = torch.load('app/license_plate_detector.pt', map_location='cpu',weights_only=True)
     
     # Initialize the model and load the weights
     license_plate_detector = YOLO('yolov8n.pt')  # Initialize with a base model
