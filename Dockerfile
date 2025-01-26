@@ -69,6 +69,7 @@ RUN apt-get update --fix-missing && apt-get install -y \
     libssl-dev \
     gcc \
     g++ \
+    tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python3.9 -m pip install inference-sdk
