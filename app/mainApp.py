@@ -37,17 +37,12 @@ def sigterm_handler(_signo, _stack_frame):
 def detect(filename, threshold):
     detections = CLIENT.infer(filename, model_id="license-plate-recognition-rxg4e/4")
 
-  # Check if detections is a list or a dictionary
-    if isinstance(detections, list):
-        predictions = detections
-    elif isinstance(detections, dict):
-        predictions = detections.get('predictions', [])
-    else:
-        logging.error("Unexpected detections format")
-        return []
+   # Assume detections is a list
+    predictions = detections
+
     # Process detections
     results = []
-    for prediction in detections.get('predictions', []):
+    for prediction in predictions:
         x = prediction.get('x')
         y = prediction.get('y')
         width = prediction.get('width')
