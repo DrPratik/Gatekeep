@@ -27,6 +27,7 @@ RUN sed -i 's/http:\/\/archive.ubuntu.com/http:\/\/mirror.math.princeton.edu\/pu
 # Install Python 3.9 and other dependencies
 RUN apt-get install -y python3.9 python3.9-dev python3.9-distutils python3-pip python3-setuptools libsm6 libxext6 libxrender-dev git wget unzip build-essential libjpeg-dev zlib1g-dev libglib2.0-0 libfreetype6-dev liblcms2-dev libopenjp2-7-dev libtiff-dev libwebp-dev libgl1-mesa-glx libxcb1-dev libffi-dev libssl-dev gcc g++
 
+RUN python3.9 -m pip install inference-sdk
 # Upgrade pip, setuptools, and wheel
 RUN python3.9 -m pip install --upgrade pip setuptools wheel
 
