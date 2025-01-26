@@ -37,8 +37,8 @@ def sigterm_handler(_signo, _stack_frame):
 def detect(filename, threshold):
     detections = CLIENT.infer(filename, model_id="license-plate-recognition-rxg4e/4")
 
-   # Assume detections is a list
-    predictions = detections
+    # Extract predictions from detections
+    predictions = detections.get('predictions', [])
 
     # Process detections
     results = []
@@ -90,19 +90,12 @@ def annotate(filename, threshold):
         drw.text((x_min+2, y_min-(txt_height+2)), label, (255, 255, 255), font=font)
     img.save(filename)
 
-def ocr(filename,detections):
-    predictions = detections.get('predictions', [])
+
+def ocr(filename, detections):
     plate_num = ""
 
-    for prediction in predictions:
-        x = prediction.get('x')
-        y = prediction.get('y')
-        width = prediction.get('width')
-        height = prediction.get('height')
-        confidence = prediction.get('confidence')
-        class_name = prediction.get('class')
-        class_id = prediction.get('class_id')
-        detection_id = prediction.get('detection_id')
+    for detection in detections:
+        class_id, confidence, (x, y, width, height) = detection
 
         # Calculate bounding box coordinates
         x_min = int(x - width / 2)
