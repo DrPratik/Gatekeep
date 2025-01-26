@@ -71,6 +71,8 @@ RUN apt-get update --fix-missing && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
+RUN python3.9 -m pip install inference-sdk
+
 # Upgrade pip, setuptools, and wheel
 RUN python3.9 -m pip install --upgrade pip setuptools wheel
 

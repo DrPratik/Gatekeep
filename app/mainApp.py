@@ -19,6 +19,13 @@ import requests
 import logging
 import torch
 import io
+from inference_sdk import InferenceHTTPClient
+
+CLIENT = InferenceHTTPClient(
+    api_url="https://detect.roboflow.com",
+    api_key="Pf4e2ngl5SyxRoYiriMh"
+)
+
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
 
@@ -28,35 +35,21 @@ def sigterm_handler(_signo, _stack_frame):
     sys.exit()
 
 def detect(filename, threshold):
-    logging.debug(f"Loading image: {filename}")
-    coco_model = YOLO('yolov8n.pt')
-
-    # Manually load the weights
-    weights = torch.load('app/license_plate_detector.pt', map_location='cpu',weights_only=True)
-    
-    # Initialize the model and load the weights
-    license_plate_detector = YOLO('yolov8n.pt')  # Initialize with a base model
-    license_plate_detector.model.load_state_dict(weights,strict=False)
-
-    # Load image from file
-    with open(filename, 'rb') as f:
-        img_bytes = f.read()
-
-    # Convert bytes to image
-    img = Image.open(io.BytesIO(img_bytes))
-    frame = np.array(img)
-
-    # Detect vehicles
-    detections = coco_model(frame)[0]
-    logging.debug(f"Image loaded with dimensions: {frame.shape[1]}x{frame.shape[0]}")
-    logging.debug(f"Raw detections: {detections}")
+    detections = CLIENT.infer(filename, model_id="license-plate-recognition-rxg4e/4")
 
     # Process detections
     results = []
-    for detection in detections.boxes.data.tolist():
-        x1, y1, x2, y2, score, class_id = detection
-        if score >= threshold:
-            results.append((class_id, score, (x1, y1, x2, y2)))
+    for prediction in detections.get('predictions', []):
+        x = prediction.get('x')
+        y = prediction.get('y')
+        width = prediction.get('width')
+        height = prediction.get('height')
+        confidence = prediction.get('confidence')
+        class_name = prediction.get('class')
+        class_id = prediction.get('class_id')
+        detection_id = prediction.get('detection_id')
+
+        results.append((class_id, confidence, (x, y, width, height)))
 
     logging.debug(f"Processed detections: {results}")
     return results
@@ -95,81 +88,69 @@ def annotate(filename, threshold):
     img.save(filename)
 
 def ocr(filename,detections):
-    bounds = detections[0][2]
-
-    box_width = int(float(bounds[2]))
-    box_height = int(float(bounds[3]))
-    box_center_x = int(float(bounds[0]))
-    box_center_y = int(float(bounds[1]))
-    x_min = int(box_center_x - box_width/2)
-    x_max = int(box_center_x + box_width/2)
-    y_min = int(box_center_y - box_height/2)
-    y_max = int(box_center_y + box_height/2)
-
-    img = cv2.imread(filename, 0)
-    gray = img[y_min:y_max, x_min:x_max]
-    gray = cv2.resize( gray, None, fx = 3, fy = 3, interpolation = cv2.INTER_CUBIC)
-    
-
-    ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
-    #cv2.imshow("Otsu", thresh)
-    #cv2.waitKey(0)
-    rect_kern = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-
-
-    dilation = cv2.dilate(thresh, rect_kern, iterations = 1)
-
-
-    try:
-        contours, hierarchy = cv2.findContours(dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    except:
-        ret_img, contours, hierarchy = cv2.findContours(dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    sorted_contours = sorted(contours, key=lambda ctr: cv2.boundingRect(ctr)[0])
-
-
-    im2 = gray.copy()
-
+    predictions = detections.get('predictions', [])
     plate_num = ""
-    arr= []
-    for cnt in sorted_contours:
-        x,y,w,h = cv2.boundingRect(cnt)
-        height, width = im2.shape
-        
-    
-        if height / float(h) > 3: continue
-        ratio = h / float(w)
-        
-        if ratio < 1: continue
-        area = h * w
-        
-        if width / float(w) > 33: continue
-        
-        if area < 100: continue
-        
-        rect = cv2.rectangle(im2, (x,y), (x+w, y+h), (0,255,0),2)
-        roi = thresh[y-5:y+h+5, x-5:x+w+5]
-        roi = cv2.bitwise_not(roi)
-        roi = cv2.medianBlur(roi, 5)
-        #cv2.imshow("ROI", roi)
-        #cv2.waitKey(0)
-        arr.append(roi)
-        #text = pytesseract.image_to_string(roi, config='-c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ --psm 8 --oem 3')
-        #print(text)
-        #plate_num += text
 
-    for x in range(len(arr)):
-        if (len(arr)-x)<=4 or x==2 or x==3:
-            text = pytesseract.image_to_string(arr[x], config='-c tessedit_char_whitelist=0123456789 --psm 8 --oem 3')
-        else:
-            text = pytesseract.image_to_string(arr[x], config='-c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ --psm 8 --oem 3')
-        clean_text = re.sub('[\W_]+', '', text)
-        plate_num += clean_text
+    for prediction in predictions:
+        x = prediction.get('x')
+        y = prediction.get('y')
+        width = prediction.get('width')
+        height = prediction.get('height')
+        confidence = prediction.get('confidence')
+        class_name = prediction.get('class')
+        class_id = prediction.get('class_id')
+        detection_id = prediction.get('detection_id')
+
+        # Calculate bounding box coordinates
+        x_min = int(x - width / 2)
+        x_max = int(x + width / 2)
+        y_min = int(y - height / 2)
+        y_max = int(y + height / 2)
+
+        # Read and process the image
+        img = cv2.imread(filename, 0)
+        gray = img[y_min:y_max, x_min:x_max]
+        gray = cv2.resize(gray, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+
+        ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
+        rect_kern = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        dilation = cv2.dilate(thresh, rect_kern, iterations=1)
+
+        try:
+            contours, hierarchy = cv2.findContours(dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        except:
+            ret_img, contours, hierarchy = cv2.findContours(dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        sorted_contours = sorted(contours, key=lambda ctr: cv2.boundingRect(ctr)[0])
+        im2 = gray.copy()
+        arr = []
+
+        for cnt in sorted_contours:
+            x, y, w, h = cv2.boundingRect(cnt)
+            height, width = im2.shape
+
+            if height / float(h) > 3: continue
+            ratio = h / float(w)
+            if ratio < 1: continue
+            area = h * w
+            if width / float(w) > 33: continue
+            if area < 100: continue
+
+            rect = cv2.rectangle(im2, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            roi = thresh[y - 5:y + h + 5, x - 5:x + w + 5]
+            roi = cv2.bitwise_not(roi)
+            roi = cv2.medianBlur(roi, 5)
+            arr.append(roi)
+
+        for x in range(len(arr)):
+            if (len(arr) - x) <= 4 or x == 2 or x == 3:
+                text = pytesseract.image_to_string(arr[x], config='-c tessedit_char_whitelist=0123456789 --psm 8 --oem 3')
+            else:
+                text = pytesseract.image_to_string(arr[x], config='-c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ --psm 8 --oem 3')
+            clean_text = re.sub('[\W_]+', '', text)
+            plate_num += clean_text
+
     pattern = '^[A-Z]{2}[ -][0-9]{1,2}(?: [A-Z])?(?: [A-Z]*)? [0-9]{4}$'
-
-
-
-    # cv2.imshow("Character's Segmented", im2)
-    # cv2.waitKey(0)
     cv2.destroyAllWindows()
     return plate_num
 
