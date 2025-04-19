@@ -243,11 +243,12 @@ def verify_from_file():
 
             if visitor:
                 data = {"Resident": False, "Visitor": str(visitor["_id"])}
+                visitor.update({"verified": True})
             else:
                 new_visitor = {
                     "visitor_number_plate": plate_text,
                     "residential_id": ObjectId(residential_id),
-                    "verified": False
+                    "verified": True
                 }
                 insert_result = visitors_collection.insert_one(new_visitor)
                 data = {"Resident": False, "Visitor": str(insert_result.inserted_id)}
