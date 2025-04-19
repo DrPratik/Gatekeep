@@ -242,8 +242,8 @@ def verify_from_file():
             })
 
             if visitor:
+                visitors_collection.update_one({"_id": visitor["_id"]}, {"$set": {"verified": True}})
                 data = {"Resident": False, "Visitor": str(visitor["_id"])}
-                visitor.update({"verified": True})
             else:
                 new_visitor = {
                     "visitor_number_plate": plate_text,
