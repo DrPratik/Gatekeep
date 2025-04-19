@@ -24,3 +24,4 @@ pytesseract==0.3.8
 opencv-python>=4.6.0
 ultralytics==8.0.114
 pymongo==3.11.4
+dnspython>=2.0.0
