@@ -30,7 +30,7 @@ CLIENT = InferenceHTTPClient(
 
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://pratikdhore:Hez6NppvtaJpN4BL@anpr-db.gvies.mongodb.net/?retryWrites=true&w=majority&appName=ANPR-db")
 client = MongoClient(MONGO_URI)
-db = client["GateKeepDB"]
+db = client["ANPR-db"]
 users_collection = db["users"]
 visitors_collection = db["visitors"]
 
