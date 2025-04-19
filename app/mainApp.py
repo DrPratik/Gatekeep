@@ -20,11 +20,19 @@ import logging
 import torch
 import io
 from inference_sdk import InferenceHTTPClient
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 CLIENT = InferenceHTTPClient(
     api_url="https://detect.roboflow.com",
     api_key="Pf4e2ngl5SyxRoYiriMh"
 )
+
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://pratikdhore:Hez6NppvtaJpN4BL@anpr-db.gvies.mongodb.net/?retryWrites=true&w=majority&appName=ANPR-db")
+client = MongoClient(MONGO_URI)
+db = client["GateKeepDB"]
+users_collection = db["users"]
+visitors_collection = db["visitors"]
 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
@@ -204,32 +212,57 @@ def detect_from_file():
     
 def verify_from_file():
     try:
-        file_to_upload = connexion.request.files['image_file']
-        threshold = float(connexion.request.form['threshold'])
-        # Use mkstemp to generate unique temporary filename
+        file = connexion.request.files['image_file']
+        threshold = float(connexion.request.form.get('threshold', 0.9))
         fd, filename = tempfile.mkstemp()
         os.close(fd)
-        file_to_upload.save(filename)
+        file.save(filename)
+
         image_type = get_image_type(filename)
         os.rename(filename, filename + '.' + image_type)
-        filename = filename + '.' + image_type
+        filename += '.' + image_type
+
         res = detect(filename, threshold)
-        text = ""
-        if len(res):
-            text = ocr(filename, res)
-            req = requests.post("https://nameless-savannah-82632.herokuapp.com/visitor/checkvisitors",json={"numberplate": text})
-            data = req.json()
+        plate_text = ocr(filename, res) if res else ""
+
+        residential_id = "67cc1b256551eaf40e374156"  # static for now
+
+        user = users_collection.find_one({
+            "residential_id": ObjectId(residential_id),
+            "number_plate": plate_text
+        })
+
+        data = {}
+        if user:
+            data = {"Resident": True}
+        else:
+            visitor = visitors_collection.find_one({
+                "visitor_number_plate": plate_text,
+                "residential_id": ObjectId(residential_id)
+            })
+
+            if visitor:
+                data = {"Resident": False, "Visitor": str(visitor["_id"])}
+            else:
+                new_visitor = {
+                    "visitor_number_plate": plate_text,
+                    "residential_id": ObjectId(residential_id),
+                    "verified": False
+                }
+                insert_result = visitors_collection.insert_one(new_visitor)
+                data = {"Resident": False, "Visitor": str(insert_result.inserted_id)}
 
         os.unlink(filename)
         return {
-            "detections" : res,
-            "number_plate" : text,
-            "verification" : data
+            "detections": res,
+            "number_plate": plate_text,
+            "verification": data
         }
-    except urllib.error.HTTPError as err:
-        return 'HTTP error', err.code
-    except:
+
+    except Exception as e:
+        logging.error(f"Verification failed: {e}")
         return 'An error occurred', 500
+
 
 def annotate_from_file():
     try:
