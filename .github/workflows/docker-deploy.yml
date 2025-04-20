@@ -61,7 +61,4 @@ jobs:
           docker pull pratikdhore/gatekeep:latest
           docker stop gatekeepContainer || true
           docker rm gatekeepContainer || true
-          docker run -d --name gatekeepContainer -p 8080:8080 \
-            -e MONGO_URI=${{ secrets.MONGO_URI }} \
-            -e ROBOFLOW_API_KEY=${{ secrets.ROBOFLOW_API_KEY }} \
-            pratikdhore/gatekeep:latest
+          docker run -d --name gatekeepContainer -p 8080:8080 -e MONGO_URI="${{ secrets.MONGO_URI }}" -e ROBOFLOW_API_KEY="${{ secrets.ROBOFLOW_API_KEY }}" pratikdhore/gatekeep:latest
