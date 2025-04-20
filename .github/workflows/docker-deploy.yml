@@ -8,7 +8,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest  # You can change this to another OS if needed
-
+    env:
+      MONGO_URI: ${{ secrets.MONGO_URI }}
+      ROBOFLOW_API_KEY: ${{ secrets.ROBOFLOW_API_KEY }}
+      
     steps:
     # Step 1: Checkout the code
     - name: Check out repository
