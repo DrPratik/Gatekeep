@@ -23,12 +23,19 @@ from inference_sdk import InferenceHTTPClient
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 
+ROBOFLOW_API_KEY = os.environ.get("ROBOFLOW_API_KEY")
+if not ROBOFLOW_API_KEY:
+    raise Exception("Missing ROBOFLOW_API_KEY in environment variables")
+
 CLIENT = InferenceHTTPClient(
     api_url="https://detect.roboflow.com",
-    api_key="Pf4e2ngl5SyxRoYiriMh"
+    api_key=ROBOFLOW_API_KEY
 )
 
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://pratikdhore:Hez6NppvtaJpN4BL@anpr-db.gvies.mongodb.net/?retryWrites=true&w=majority&appName=ANPR-db")
+MONGO_URI = os.environ.get("MONGO_URI")
+if not MONGO_URI:
+    raise Exception("Missing MONGO_URI in environment variables")
+
 client = MongoClient(MONGO_URI)
 db = client["test"]
 users_collection = db["users"]
