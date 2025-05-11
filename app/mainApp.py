@@ -22,6 +22,8 @@ import io
 from inference_sdk import InferenceHTTPClient
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from datetime import datetime
+
 
 ROBOFLOW_API_KEY = os.environ.get("ROBOFLOW_API_KEY")
 if not ROBOFLOW_API_KEY:
@@ -248,13 +250,15 @@ def verify_from_file():
             })
 
             if visitor:
-                visitors_collection.update_one({"_id": visitor["_id"]}, {"$set": {"verified": True}})
+                visitors_collection.update_one({"_id": visitor["_id"]}, {"$set": {"verified": True, "updatedAt": datetime.utcnow()}})
                 data = {"Resident": False, "Visitor": str(visitor["_id"])}
             else:
                 new_visitor = {
                     "visitor_number_plate": plate_text,
                     "residential_id": ObjectId(residential_id),
-                    "verified": True
+                    "verified": True, 
+                    "createdAt": datetime.utcnow(),
+                    "updatedAt": datetime.utcnow()
                 }
                 insert_result = visitors_collection.insert_one(new_visitor)
                 data = {"Resident": False, "Visitor": str(insert_result.inserted_id)}
