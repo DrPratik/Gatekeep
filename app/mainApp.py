@@ -236,7 +236,7 @@ def verify_from_file():
 
         user = users_collection.find_one({
             "residential_id": ObjectId(residential_id),
-            "number_plate": plate_text
+            "number_plate": {"$in": [plate_text]}
         })
 
         data = {}
