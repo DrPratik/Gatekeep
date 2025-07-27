@@ -58,7 +58,25 @@ jobs:
         key: ${{ secrets.VM_SSH_KEY }}
         port: 22
         script: |
+          # Pull the latest image for GateKeep
           docker pull pratikdhore/gatekeep:latest
+
+          # Stop & remove the old container if it exists
           docker stop gatekeepContainer || true
           docker rm gatekeepContainer || true
-          docker run -d --name gatekeepContainer -p 8080:8080 -e MONGO_URI="${{ secrets.MONGO_URI }}" -e ROBOFLOW_API_KEY="${{ secrets.ROBOFLOW_API_KEY }}" pratikdhore/gatekeep:latest
+
+          # Create a Docker network if not already created
+          docker network create app-network || true
+
+          # Run the GateKeep container INSIDE the network (no port exposed)
+          docker run -d --name gatekeepContainer --network app-network \
+            -e MONGO_URI="${{ secrets.MONGO_URI }}" \
+            -e ROBOFLOW_API_KEY="${{ secrets.ROBOFLOW_API_KEY }}" \
+            pratikdhore/gatekeep:latest
+
+          # Start or restart the NGINX reverse proxy container (assumes nginx.conf is already in place)
+          docker stop nginxProxy || true
+          docker rm nginxProxy || true
+          docker run -d --name nginxProxy --network app-network \
+            -v /home/ubuntu/nginx.conf:/etc/nginx/nginx.conf:ro \
+            -p 80:80 nginx
