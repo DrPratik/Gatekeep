@@ -315,7 +315,7 @@ def annotate_from_url(url, threshold):
 app = connexion.App(__name__)
 # For compatibility we will make the API available both with and without a version basepath
 app.add_api('swag.yaml')
-app.add_api('swag.yaml', base_path='/1.0')
+app.add_api('swag.yaml', base_path='/gatekeep')
 
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, sigterm_handler)
