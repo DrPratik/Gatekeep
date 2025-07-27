@@ -314,7 +314,6 @@ def annotate_from_url(url, threshold):
 # Create API:
 app = connexion.App(__name__)
 # For compatibility we will make the API available both with and without a version basepath
-app.add_api('swag.yaml')
 app.add_api('swag.yaml', base_path='/gatekeep')
 
 if __name__ == '__main__':
