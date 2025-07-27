@@ -47,4 +47,4 @@ The app is containerized with Docker and deployed to a remote VM using GitHub Ac
    - Else → added/updated in visitors collection.
 
 ## 🐳 Docker
-live swagger ui for this http://80.225.225.183/gatekeep/ui/
+live swagger ui for this http://80.225.225.183/gatekeep/gatekeep/ui/
